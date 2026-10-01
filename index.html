@@ -31,7 +31,7 @@ h1{font-size:42px;margin:12px 0 4px;letter-spacing:-1.5px}.sub{color:#8a7889;mar
 const people=[
 {name:"Sophia",emoji:"🦋"},{name:"Cami",emoji:"🐰"},{name:"Cris",emoji:"🐻"},
 {name:"Paola",emoji:"🐱"},{name:"Salome",emoji:"🌸"}];
-const SUPABASE_URL=""; const SUPABASE_ANON_KEY="";
+const SUPABASE_URL="https://duijumkvmqmejpvtlkit.supabase.co"; const SUPABASE_ANON_KEY="sb_publishable_wWNW6AXL8qms9QRlB__Bbg_4R6G9JzT";
 let selected=1, data={};
 const peopleEl=document.getElementById("people");
 people.forEach((p,i)=>{const b=document.createElement("button");b.className="person"+(i===selected?" active":"");
@@ -47,9 +47,12 @@ function render(){for(let d=1;d<=31;d++){let box=document.getElementById("s"+d);
 document.getElementById("stats").innerHTML=people.map((p,i)=>{let n=Object.values(data).filter(a=>a.includes(i)).length;return `<div class="stat">${p.emoji} ${p.name}: <b>${n}</b> días</div>`}).join("")}
 function toggle(day){data[day]??=[];let pos=data[day].indexOf(selected);if(pos>=0)data[day].splice(pos,1);else data[day].push(selected);render();save(day)}
 async function save(day){if(!SUPABASE_URL||!SUPABASE_ANON_KEY){localStorage.setItem("octoberGirls",JSON.stringify(data));setStatus("Guardado en este navegador. Falta conectar la base online.","");return}
-const row={day,member:people[selected].name,active:data[day].includes(selected)};
+const row={day,member:people[selected].name,active:data[day].includes(selected),month:"2026-10"};
 try{await fetch(SUPABASE_URL+"/rest/v1/checkins",{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates"},body:JSON.stringify(row)});setStatus("✨ Guardado para todas.","ok")}catch(e){setStatus("No se pudo guardar online.","err")}}
 async function load(){if(!SUPABASE_URL||!SUPABASE_ANON_KEY){data=JSON.parse(localStorage.getItem("octoberGirls")||"{}");render();return}
 try{let r=await fetch(SUPABASE_URL+"/rest/v1/checkins?select=day,member,active&month=eq.2026-10",{headers:{apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+SUPABASE_ANON_KEY}});let rows=await r.json();data={};rows.forEach(x=>{let i=people.findIndex(p=>p.name===x.member);if(i>=0&&x.active)(data[x.day]??=[]).push(i)});render();setStatus("☁️ Calendario compartido online.","ok")}catch(e){setStatus("No se pudo cargar el calendario online.","err")}}
 load();
+setInterval(async ()=>{
+  if(document.visibilityState==="visible") await load();
+}, 3000);
 </script></body></html>
